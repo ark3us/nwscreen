@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
+import matplotlib.backends.backend_tkagg
 import numpy as np
 import os
 from PIL import Image
@@ -20,14 +21,21 @@ def onselect(eclick, erelease):
 
 
 def main():
+    if not os.path.exists("pics"):
+        os.mkdir("pics")
+
     images = []
 
-    for root, _, files in os.walk("imgs"):
+    for root, _, files in os.walk("pics"):
         for f in files:
             if "screenshots_here" in f:
                 continue
             filename = os.path.join(root, f)
             images.append(filename)
+    
+    if not images:
+        input("Metti gli screenshot nella cartella 'pics' e avvia di nuovo il programma...")
+        return
 
     # Sort by creation time
     images.sort(key=os.path.getctime)
@@ -76,7 +84,7 @@ def main():
             r,g,b = image_data[loop1,loop2]
             if r < 50 and b < 50 and g > 170:
                 for x in range(loop1-5, loop1+5):
-                    for y in range(loop2-5, loop2+5):
+                    for y in range(loop2-7, loop2+7):
                         image_data[x, y] = r, 169, b
 
     newimg.show()
