@@ -56,6 +56,7 @@ def main():
                 if progress.qsize() > 0:
                     sg.OneLineProgressMeter('Processando le immagini...', progress.qsize(), len(images))
             if resimg:
+                resimg.save("collage_{}.jpg".format(time.time()))
                 resimg.show()
 
 
