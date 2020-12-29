@@ -53,10 +53,10 @@ def main():
             th.daemon = True
             th.start()
 
-            while progress.qsize() < len(images) or done:
-                time.sleep(0.5)
+            while not done:
+                time.sleep(1)
                 if progress.qsize() > 0:
-                    sg.OneLineProgressMeter('Processando le immagini...', progress.qsize(), len(images), 'key')
+                    sg.OneLineProgressMeter('Processando le immagini...', progress.qsize(), len(images))
 
 
 def process(images, progress):
@@ -100,7 +100,7 @@ def _process(images: list, progress: queue.Queue):
             plt.imshow(arr)
             rs = widgets.RectangleSelector(
                 ax, onselect, drawtype='box',
-                rectprops = dict(facecolor='red', edgecolor = 'black', alpha=0.5, fill=True))
+                rectprops = dict(facecolor='red', edgecolor='black', alpha=0.5, fill=True))
 
             mng = plt.get_current_fig_manager()
             if os.name == 'nt':
@@ -121,7 +121,7 @@ def _process(images: list, progress: queue.Queue):
             for loop2 in range(width):
                 r, g, b = image_data[loop1,loop2]
                 if r < 50 and b < 50 and g > 170:
-                    for x in range(5, loop1+7):
+                    for x in range(5, height-5):
                         for y in range(loop2-7, loop2+7):
                             image_data[x, y] = r, 169, b
 
@@ -134,7 +134,8 @@ def _process(images: list, progress: queue.Queue):
     
         progress.put(filename)
 
-    # newimg.show()
+    global done
+    done = True
 
     newimg.show()
 
