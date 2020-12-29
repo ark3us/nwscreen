@@ -12,6 +12,7 @@ import time
 from PIL import Image
 
 done = False
+x1 = x2 = y1 = y2 = 0
 
 def main():
     images = []
@@ -58,9 +59,6 @@ def main():
                     sg.OneLineProgressMeter('Processando le immagini...', progress.qsize(), len(images), 'key')
 
 
-x1 = x2 = y1 = y2 = 0
-
-
 def process(images, progress):
     try:
         _process(images, progress)
@@ -75,6 +73,8 @@ def onselect(eclick, erelease):
     x2 = int(erelease.xdata)
     y1 = int(eclick.ydata)
     y2 = int(erelease.ydata)
+
+    # print(x1, x2, y1, y2)
     plt.close()
 
 
@@ -125,9 +125,10 @@ def _process(images: list, progress: queue.Queue):
                         for y in range(loop2-7, loop2+7):
                             image_data[x, y] = r, 169, b
 
-        tmpimg = Image.new("RGB", (maxrows*(x1+x2), (cols+1)*(y2-y1)))
+        tmpimg = Image.new("RGB", (maxrows*(x2-x1), (cols+1)*(y2-y1)))
         tmpimg.paste(newimg, (0, 0))
-        tmpimg.paste(im1, (rows*(x1+x2), cols*(y2-y1)))
+        tmpimg.paste(im1, (rows*(x2-x1), cols*(y2-y1)))
+        
         newimg = tmpimg
         rows += 1
     
