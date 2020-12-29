@@ -13,6 +13,7 @@ from PIL import Image
 
 done = False
 x1 = x2 = y1 = y2 = 0
+resimg = None
 
 def main():
     images = []
@@ -49,22 +50,32 @@ def main():
         
         elif event == "Inizia!":
             progress = queue.Queue()
-            th = threading.Thread(target=process, args=(images, progress))
-            th.daemon = True
-            th.start()
-
+            process(images, progress)
             while not done:
                 time.sleep(1)
                 if progress.qsize() > 0:
                     sg.OneLineProgressMeter('Processando le immagini...', progress.qsize(), len(images))
+            if resimg:
+                resimg.show()
 
 
-def process(images, progress):
-    try:
-        _process(images, progress)
-    finally:
-        global done
-        done = True
+def process(images: list, progress: queue.Queue):
+    global done, resimg, x1, x2, y1, y2
+    resimg = None
+    done = False
+    x1 = x2 = y1 = y2 = 0
+
+    def process_thread():
+        try:
+            global resimg
+            resimg = process_images(images, progress)
+        finally:
+            global done
+            done = True
+
+    th = threading.Thread(target=process_thread)
+    th.daemon = True
+    th.start()
 
 
 def onselect(eclick, erelease):
@@ -78,7 +89,7 @@ def onselect(eclick, erelease):
     plt.close()
 
 
-def _process(images: list, progress: queue.Queue):
+def process_images(images: list, progress: queue.Queue) -> Image:
     if not images:
         return
 
@@ -134,11 +145,7 @@ def _process(images: list, progress: queue.Queue):
     
         progress.put(filename)
 
-    global done
-    done = True
-
-    newimg.show()
-
+    return newimg
 
 if __name__ == "__main__":
     main()
