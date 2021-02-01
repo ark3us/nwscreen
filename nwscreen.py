@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+from PySimpleGUI.PySimpleGUI import T
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
+import matplotlib.backends.backend_qt5agg
 import matplotlib.backends.backend_tkagg
 import numpy as np
 import os
@@ -16,6 +19,7 @@ x1 = x2 = y1 = y2 = 0
 resimg = None
 
 def main():
+    matplotlib.use("Qt5Agg")
     images = []
 
     layout = [
@@ -60,11 +64,44 @@ def main():
                 resimg.show()
 
 
+def onselect(eclick, erelease):
+    global x1, x2, y1, y2
+    x1 = int(eclick.xdata)
+    x2 = int(erelease.xdata)
+    y1 = int(eclick.ydata)
+    y2 = int(erelease.ydata)
+
+    # print(x1, x2, y1, y2)
+    plt.close()
+
+
 def process(images: list, progress: queue.Queue):
     global done, resimg, x1, x2, y1, y2
     resimg = None
     done = False
     x1 = x2 = y1 = y2 = 0
+
+    if len(images) < 2:
+        done = True
+        return
+
+    im = Image.open(images[0])
+    # Select chat window
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    arr = np.asarray(im)
+    plt.imshow(arr)
+    rs = widgets.RectangleSelector(
+        ax, onselect, drawtype='box',
+        rectprops = dict(facecolor='red', edgecolor='black', alpha=0.5, fill=True))
+
+    mng = plt.get_current_fig_manager()
+    mng.window.showMaximized()
+    plt.show()
+
+    if x2 == 0:
+        done = True
+        return
 
     def process_thread():
         try:
@@ -77,17 +114,6 @@ def process(images: list, progress: queue.Queue):
     th = threading.Thread(target=process_thread)
     th.daemon = True
     th.start()
-
-
-def onselect(eclick, erelease):
-    global x1, x2, y1, y2
-    x1 = int(eclick.xdata)
-    x2 = int(erelease.xdata)
-    y1 = int(eclick.ydata)
-    y2 = int(erelease.ydata)
-
-    # print(x1, x2, y1, y2)
-    plt.close()
 
 
 def process_images(images: list, progress: queue.Queue) -> Image:
@@ -104,22 +130,6 @@ def process_images(images: list, progress: queue.Queue) -> Image:
 
     for filename in images:
         im = Image.open(filename)
-        if not x2:
-            # Select chat window
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            arr = np.asarray(im)
-            plt.imshow(arr)
-            rs = widgets.RectangleSelector(
-                ax, onselect, drawtype='box',
-                rectprops = dict(facecolor='red', edgecolor='black', alpha=0.5, fill=True))
-
-            mng = plt.get_current_fig_manager()
-            if os.name == 'nt':
-                mng.window.state('zoomed')
-            else:
-                mng.resize(*mng.window.maxsize())
-            plt.show()
         
         if rows == 5:
             cols += 1
