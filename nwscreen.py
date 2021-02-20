@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from PySimpleGUI.PySimpleGUI import T
+from PySimpleGUI.PySimpleGUI import Checkbox, T
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
@@ -26,7 +26,7 @@ def main():
         [sg.Input(key="_FILES_", enable_events=True, visible=False)],
         [sg.Text("Seleziona screenshots: "), sg.FilesBrowse("...", target="_FILES_")],
         [sg.Multiline(key="_FILELIST_", disabled=True)],
-        [sg.Button("Inizia!")],
+        [sg.Checkbox("Cancella Tell", default=True, key="_DELTELLS_"), sg.Button("Inizia!")],
     ]
 
     window = sg.Window("Screenshot Composer", layout, finalize=True, auto_size_text=True, auto_size_buttons=True, resizable=True)
@@ -54,7 +54,7 @@ def main():
         
         elif event == "Inizia!":
             progress = queue.Queue()
-            process(images, progress)
+            process(images, progress, values.get("_DELTELLS_"))
             while not done:
                 time.sleep(1)
                 if progress.qsize() > 0:
@@ -75,7 +75,7 @@ def onselect(eclick, erelease):
     plt.close()
 
 
-def process(images: list, progress: queue.Queue):
+def process(images: list, progress: queue.Queue, deltells = False):
     global done, resimg, x1, x2, y1, y2
     resimg = None
     done = False
@@ -106,7 +106,7 @@ def process(images: list, progress: queue.Queue):
     def process_thread():
         try:
             global resimg
-            resimg = process_images(images, progress)
+            resimg = process_images(images, progress, deltells)
         finally:
             global done
             done = True
@@ -116,7 +116,7 @@ def process(images: list, progress: queue.Queue):
     th.start()
 
 
-def process_images(images: list, progress: queue.Queue) -> Image:
+def process_images(images: list, progress: queue.Queue, deltells = False) -> Image:
     if not images:
         return
 
@@ -137,15 +137,16 @@ def process_images(images: list, progress: queue.Queue) -> Image:
 
         im1 = im.crop((x1, y1, x2, y2)).convert("RGB")
         # Delete tells
-        image_data = im1.load()
-        height, width = im1.size
-        for loop1 in range(height):
-            for loop2 in range(width):
-                r, g, b = image_data[loop1,loop2]
-                if r < 50 and b < 50 and g > 170:
-                    for x in range(5, height-5):
-                        for y in range(loop2-7, loop2+7):
-                            image_data[x, y] = r, 169, b
+        if deltells:
+            image_data = im1.load()
+            height, width = im1.size
+            for loop1 in range(height):
+                for loop2 in range(width):
+                    r, g, b = image_data[loop1,loop2]
+                    if r < 50 and b < 50 and g > 170:
+                        for x in range(5, height-5):
+                            for y in range(loop2-7, loop2+7):
+                                image_data[x, y] = r, 169, b
 
         tmpimg = Image.new("RGB", (maxrows*(x2-x1), (cols+1)*(y2-y1)))
         tmpimg.paste(newimg, (0, 0))

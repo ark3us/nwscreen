@@ -5,10 +5,10 @@ Applicazione per creare collage di dialoghi.
 ### Windows
 ```
 type nul > matplotlibrc
-pyinstaller.exe --onefile --add-data "matplotlibrc;." .\nwscreen.py
+pyinstaller.exe --clean --onefile --add-data "matplotlibrc;." .\nwscreen.py
 ```
 ### Linux
 ```
 touch matplotlibrc
-pyinstaller --onefile --add-data "matplotlibrc:." ./nwscreen.py
+pyinstaller --claen --onefile --add-data "matplotlibrc:." ./nwscreen.py
 ```
